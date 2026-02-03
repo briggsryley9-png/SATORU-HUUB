@@ -10,3 +10,4 @@
 **Contact:** briggsryley9@gmail.com
 **DevForum:** [@alaynaandryley](https://devforum.roblox.com)
 loadstring(game:HttpGet("https://raw.githubusercontent.com/SATORU/SATORU-HUUB/refs/heads/main/script.lua"))()
+![Luau](https://img.shields.io) | **Expert** | 75% |
