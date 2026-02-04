@@ -1,0 +1,126 @@
+local displayAssetId = 116155168863313
+local timerAssetId   = 128607699299345
+
+-- Services
+local Workspace = game:GetService("Workspace")
+local Players   = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ===== GLOBAL ASSET TEMPLATES =====
+local DisplayTemplate
+local TimerTemplate
+
+local function safeLoadAsset(assetId)
+    local ok, obj = pcall(function()
+        return game:GetObjects("rbxassetid://"..assetId)[1]
+    end)
+    if not ok or not obj then
+        return nil
+    end
+    return obj
+end
+
+DisplayTemplate = safeLoadAsset(displayAssetId)
+TimerTemplate   = safeLoadAsset(timerAssetId)
+
+-- ===== MONEY PARSING =====
+local suffixes = {K=1e3, M=1e6, B=1e9, T=1e12, Qa=1e15, Qi=1e18}
+local function parseGeneration(text)
+    if not text then return 0 end
+    text = text:match("^%$(.+)") or text
+    text = text:gsub("/S$", ""):gsub(",", "")
+    local numberStr = text:match("^[%d%.]+")
+    local suffix = text:match("[%a]+")
+    local number = tonumber(numberStr) or 0
+    if suffix and suffixes[suffix] then number = number * suffixes[suffix] end
+    return number
+end
+
+-- ===== HELPERS =====
+local function stripPossessive(s)
+    if not s then return nil end
+    s = s:gsub("%s+$","")
+    s = s:gsub("[’']s$","")
+    return s:gsub("%s+$","")
+end
+
+local function ieq(a,b)
+    if not a or not b then return false end
+    return string.lower(a) == string.lower(b)
+end
+
+local function anchorAllBaseParts(root)
+    for _, d in ipairs(root:GetDescendants()) do
+        if d:IsA("BasePart") then
+            d.Anchored = true
+            d.CanCollide = false
+        end
+    end
+end
+
+-- ===== GLOBAL STATE =====
+local currentHighestOverhead = nil
+local currentBillboard = nil
+local currentModelHighlight = nil
+local currentPartHighlight = nil
+local currentMaxVal = -1
+local currentTopOwnerName = nil
+local plotToTimer = {}
+local playerHighlights = {}
+
+-- ===== CLEANUP =====
+local function clearCurrentVisuals()
+    if currentBillboard then currentBillboard:Destroy() currentBillboard = nil end
+    if currentModelHighlight then currentModelHighlight:Destroy() currentModelHighlight = nil end
+    if currentPartHighlight then currentPartHighlight:Destroy() currentPartHighlight = nil end
+end
+
+local function resetCurrentHighest(setMaxToZero)
+    clearCurrentVisuals()
+    currentHighestOverhead = nil
+    currentTopOwnerName = nil
+    currentMaxVal = setMaxToZero and 0 or -1
+end
+
+-- ===== HIGHEST GENERATION DISPLAY =====
+local function getOwnerFromPlot(plot)
+    local multiplierPart = plot:FindFirstChild("Multiplier", true)
+    local parentForSign = multiplierPart and multiplierPart.Parent or plot
+    local plotSign = parentForSign:FindFirstChild("PlotSign") or parentForSign:FindFirstChild("PlotSign", true)
+    if not plotSign then plotSign = plot:FindFirstChild("PlotSign", true) end
+    if not plotSign then return nil end
+    local label = plotSign:FindFirstChildWhichIsA("TextLabel", true)
+    return label and stripPossessive(label.Text) or nil
+end
+
+local function updateHighestDisplay()
+    local plotsFolder = Workspace:FindFirstChild("Plots")
+    if not plotsFolder then return end
+
+    resetCurrentHighest(true)
+    local bestVal, bestOverhead, bestPlot, bestOwnerName = -1, nil, nil, nil
+
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        if plot:IsA("Model") or plot:IsA("Folder") then
+            local plotBestVal, plotBestOverhead = -1, nil
+            for _, obj in ipairs(plot:GetDescendants()) do
+                if obj.Name == "AnimalOverhead" and obj:IsA("BillboardGui") then
+                    local genLabel = obj:FindFirstChild("Generation")
+                    if genLabel and genLabel:IsA("TextLabel") then
+                        local val = parseGeneration(genLabel.Text)
+                        if val > plotBestVal then
+                            plotBestVal, plotBestOverhead = val, obj
+                        end
+                    end
+                end
+            end
+            if plotBestOverhead and plotBestVal > bestVal then
+                local ownerName = getOwnerFromPlot(plot)
+                -- 🔹 Skip if owner is the LocalPlayer
+                if ownerName and not ieq(ownerName, LocalPlayer.Name) then
+                    bestVal, bestOverhead, bestPlot, bestOwnerName = plotBestVal, plotBestOverhead, plot, ownerName
+                end
+            end
+        end
+    end
