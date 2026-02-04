@@ -1,0 +1,24 @@
+LoadingUIElements.dotConnectionLoadingUIElements.teleportingStatus.Text_G.Services
+    end)
+end
+
+-- Function to hide loading UI
+local function hideLoadingUI()
+    -- Hide loading UI immediately (no wait)
+    if LoadingUIElements and LoadingUIElements.dotConnection then
+        LoadingUIElements.dotConnection:Disconnect()
+    end
+    
+    if LoadingUI then
+        LoadingUI:Destroy()
+        LoadingUI = nil
+        LoadingUIElements = {}
+    end
+end
+
+-- Function to update loading UI status
+local function updateLoadingStatus(status)
+    if LoadingUIElements and LoadingUIElements.teleportingStatus then
+        LoadingUIElements.teleportingStatus.Text = status
+    end
+end
