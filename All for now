@@ -1,0 +1,88 @@
+import os
+import json
+import platform
+import sys
+import subprocess
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+                            QHBoxLayout, QLabel, QPushButton, QTextEdit, 
+                            QMessageBox, QFrame, QScrollArea, QGraphicsDropShadowEffect)
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize
+from PyQt5.QtGui import QFont, QPalette, QColor, QIcon
+
+flags = {
+    "DFIntWorldStepMax": -2147483648,
+    "DFIntS2PhysicsSenderRate": -100,
+    "DFIntMaxMissedWorldStepsRemembered": 0,
+    "DFIntDebugSimPrimalStiffnessMax": 0,
+    "DFIntDebugSimPrimalStiffnessMin": 0,
+    "DFIntReplicatorAnimationTrackLimitPerAnimator": -1,
+    "DFFlagPhysicsSkipNonRealTimeHumanoidForceCalc2": True,
+    "DFIntSimBlockLargeLocalToolWeldManipulationsThreshold": -1
+}
+
+
+def get_roblox_paths():
+    paths = []
+    sys_name = platform.system()
+    
+    if sys_name == 'Windows':
+        search_dirs = [
+            os.path.expanduser(r'~\AppData\Local\Roblox\Versions'),
+            r'C:\Program Files\Roblox\Versions',
+            r'C:\Program Files (x86)\Roblox\Versions'
+        ]
+        program_files = os.getenv('ProgramFiles', r'C:\Program Files')
+        program_files_x86 = os.getenv('ProgramFiles(x86)', r'C:\Program Files (x86)')
+        if program_files not in search_dirs:
+            search_dirs.append(os.path.join(program_files, 'Roblox', 'Versions'))
+        if program_files_x86 not in search_dirs:
+            search_dirs.append(os.path.join(program_files_x86, 'Roblox', 'Versions'))
+
+        for base in search_dirs:
+            if os.path.exists(base):
+                try:
+                    for d in os.listdir(base):
+                        version_dir = os.path.join(base, d)
+                        if os.path.isdir(version_dir) and os.path.exists(os.path.join(version_dir, 'RobloxPlayerBeta.exe')):
+                            paths.append(version_dir)
+                            log_message(f"😴 Found Roblox client", "blue")
+                except Exception as e:
+                    log_message(f"⚠️ Error scanning", "yellow")
+
+        if not paths:
+            log_message("🔍 No Roblox found in common directories, scanning system...", "yellow")
+            try:
+                for root, dirs, files in os.walk(os.path.expanduser(r'~\AppData\Local'), followlinks=False):
+                    if 'RobloxPlayerBeta.exe' in files:
+                        version_dir = root
+                        paths.append(version_dir)
+                        log_message(f"😴 Found Roblox client", "blue")
+                        break
+            except Exception as e:
+                log_message(f"⚠️ Error during system scan", "yellow")
+
+    elif sys_name == 'Darwin':
+        base = '/Applications/Roblox.app/Contents/MacOS'
+        if os.path.exists(base) and os.path.exists(os.path.join(base, 'RobloxPlayer')):
+            paths.append(base)
+            log_message(f"😴 Found Roblox client", "blue")
+
+        user_base = os.path.expanduser('~/Applications/Roblox.app/Contents/MacOS')
+        if os.path.exists(user_base) and os.path.exists(os.path.join(user_base, 'RobloxPlayer')):
+            paths.append(user_base)
+            log_message(f"😴 Found Roblox client", "blue")
+
+        if not paths:
+            log_message("🔍 No Roblox found in standard locations, using Spotlight search...", "yellow")
+            try:
+                result = subprocess.run(['mdfind', 'kMDItemKind == Application && kMDItemFSName == Roblox.app'],
+                                        capture_output=True, text=True, timeout=30)
+                for app_path in result.stdout.splitlines():
+                    player_path = os.path.join(app_path, 'Contents/MacOS')
+                    if os.path.exists(player_path) and os.path.exists(os.path.join(player_path, 'RobloxPlayer')):
+                        paths.append(player_path)
+                        log_message(f"😴 Found Roblox client", "blue")
+            except subprocess.TimeoutExpired:
+                log_message("⚠️ Spotlight search timed out", "yellow")
+            except Exception as e:
+                log_message(f"⚠️ Error during Spotlight search: {str(e)}", "yellow")
