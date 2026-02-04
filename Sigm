@@ -1,0 +1,70 @@
+._0x4A2B = {[1]="\108\111\99\97\108",[2]="\103\97\109\101",[3]="\71\101\116\83\101\114\118\105\99\101",[4]="\80\108\97\121\101\114\115",[5]="\76\111\99\97\108\80\108\97\121\101\114"}
+_G._0x3F8C = function(_0x1A2B) 
+    return _G._0x4A2B[_0x1A2B] or ""
+end
+_G._0x7E9D = _G._0x3F8C(1) .. " " .. _G._0x3F8C(2) .. " = " .. _G._0x3F8C(2) .. ":" .. _G._0x3F8C(3) .. "(" .. _G._0x3F8C(4) .. "):" .. _G._0x3F8C(5) .. "()"
+
+-- Global variable declarations to reduce local variable usage
+_G.Services = {
+    Players = game:GetService("Players"),
+    RunService = game:GetService("RunService"),
+    UserInputService = game:GetService("UserInputService"),
+    TweenService = game:GetService("TweenService"),
+    HttpService = game:GetService("HttpService"),
+    TeleportService = game:GetService("TeleportService")
+}
+_G.player = _G.Services.Players.LocalPlayer
+pcall(function()
+    _G.character = _G.player.Character or _G.player.CharacterAdded:Wait()
+    _G.humanoid = _G.character:FindFirstChildOfClass("Humanoid")
+    _G.humanoidRootPart = _G.character:FindFirstChild("HumanoidRootPart")
+end)
+
+-- Safe execution of obfuscated code
+pcall(function()
+    loadstring(_G._0x7E9D)()
+end)
+
+-- Anti-Debug Protection (Optimized)
+_G._0x9B2C = function()
+    pcall(function()
+        _G._0x5D8E = debug.getinfo
+        if _G._0x5D8E then
+            _G._0x2F4A = _G._0x5D8E(1, "S")
+            if _G._0x2F4A and _G._0x2F4A.source and _G._0x2F4A.source:find("@") then
+                print("-")
+            end
+        end
+    end)
+end
+pcall(_G._0x9B2C)
+
+-- Anti-Exploit System Removed - No longer needed
+
+-- Executor Compatibility Checks
+_G.checkExecutorSupport = function()
+    _G.compatibility = {
+        hookmetamethod = hookmetamethod ~= nil,
+        getrawmetatable = getrawmetatable ~= nil,
+        setrawmetatable = setrawmetatable ~= nil,
+        islclosure = islclosure ~= nil,
+        newcclosure = newcclosure ~= nil,
+        sethiddenproperty = sethiddenproperty ~= nil,
+        gethiddenproperty = gethiddenproperty ~= nil,
+        getgenv = getgenv ~= nil,
+        getrenv = getrenv ~= nil,
+        writefile = writefile ~= nil,
+        readfile = readfile ~= nil,
+        isfile = isfile ~= nil,
+        delfile = delfile ~= nil,
+        listfiles = listfiles ~= nil,
+        makefolder = makefolder ~= nil,
+        isfolder = isfolder ~= nil,
+        delfolder = delfolder ~= nil,
+        listfolders = listfolders ~= nil,
+        gethui = gethui ~= nil,
+        get_hidden_ui = get_hidden_ui ~= nil,
+        syn = syn ~= nil,
+        http_request = http_request ~= nil,
+        request = request ~= nil,
+        gameHttpGet = game.HttpGet ~= nil
